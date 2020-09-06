@@ -1,7 +1,8 @@
 from datetime import datetime
 from config import LOGGER
-from account import MyAccount, client_production
+from account import MyAccount
 import pandas as pd
+import time
 
 
 class Asset(MyAccount):
@@ -20,12 +21,14 @@ class Asset(MyAccount):
         self.candle_data_list = []
         self.close_price_list = []
         self.close_volume_list = []
-        self.my_init_asset_trade_balance = self.get_account_asset_balance(
+        self.asset_main_balance = self.get_account_asset_balance(
+            self.asset_main)
+        self.asset_pair_balance = self.get_account_asset_balance(
             self.asset_pair)
         LOGGER.info(
-            f'QUANTITY OF {self.asset_main}= {self.get_account_asset_balance(self.asset_main)}')
+            f'QUANTITY OF {self.asset_main}: {self.asset_main_balance}')
         LOGGER.info(
-            f'QUANTITY OF {self.asset_pair}= {self.my_init_asset_trade_balance}')
+            f'QUANTITY OF {self.asset_pair}: {self.asset_pair_balance}')
         self.current_operated_asset_quantity = None
         self.mm8_now = None
         self.mm8_before = None
@@ -42,7 +45,7 @@ class Asset(MyAccount):
         self.volume_now = None
         self.volume_before = None
         self.taxes_current_price = None
-        self.data_list_for_dict_print = ['self.tendency', 'self.mm8_now', 'self.mm8_before', ' self.mm10_now', 'self.mm10_before',
+        self.data_list_for_dict_print = ['self.tendency', 'self.mm8_now', 'self.mm8_before', 'self.mm10_now', 'self.mm10_before',
                                          'self.mm20_now', 'self.mm20_before', 'self.mm50_now', 'self.mm50_before',
                                          'self.mm200_now', 'self.mm200_before', 'self.close_now', 'self.close_before',
                                          'self.volume_now', 'self.volume_before']
@@ -54,19 +57,19 @@ class Asset(MyAccount):
         self.dict_to_log(self.data_dict_for_print)
 
     def get_current_asset_value(self):
-        ticker_data = client_production.get_symbol_ticker(symbol=self.symbol)
-        self.actual_price = round(float(ticker_data['price']), 3)
+        ticker_data = self.client.get_symbol_ticker(symbol=self.symbol)
+        self.actual_price = round(float(ticker_data['price']), 5)
         LOGGER.info(f'ACTUAL ASSET PRICE: {self.actual_price}')
 
     def get_account_asset_balance(self, asset):
         for balance in range(len(self.account['balances'])):
             if self.account['balances'][balance]['asset'] == asset:
-                return round(float(self.account['balances'][balance]['free']), 4)
+                return round(float(self.account['balances'][balance]['free']), 5)
 
     def get_candle_asset_data(self):
         self.candle_data_list.clear()
         self.candle_data_list = self.reverse_list(
-            client_production.get_klines(symbol=self.symbol, interval=self.interval))
+            self.client.get_klines(symbol=self.symbol, interval=self.interval, limit=self.limit_data))
         return
 
     def mm_now(self, period):
@@ -75,7 +78,7 @@ class Asset(MyAccount):
         moving_averages = windows.mean()
         moving_averages_list = moving_averages.tolist()
         without_nans = moving_averages_list[period - 1:]
-        return round(without_nans[0], 3)
+        return round(without_nans[0], 6)
 
     def mm_before(self, period):
         numbers_series = pd.Series(self.close_price_list)
@@ -83,19 +86,22 @@ class Asset(MyAccount):
         moving_averages = windows.mean()
         moving_averages_list = moving_averages.tolist()
         without_nans = moving_averages_list[period - 1:]
-        return round(without_nans[1], 3)
+        return round(without_nans[1], 6)
 
     def create_close_list(self):
         self.close_price_list.clear()
         self.close_volume_list.clear()
-        for index in range(1, len(self.candle_data_list)):
-            self.close_price_list.append(
-                float(self.candle_data_list[index][4]))
-            self.close_volume_list.append(
-                float(self.candle_data_list[index][5]))
+        self.timestamp_for_candle_data()
+        for index in range(0, len(self.candle_data_list)):
+            if self.candle_data_list[index][0] <= self.timestamp_to_candle_data:
+                self.close_price_list.append(
+                    float(self.candle_data_list[index][4]))
+                self.close_volume_list.append(
+                    float(self.candle_data_list[index][5]))
 
     def calculate_indicators(self):
         self.create_close_list()
+        LOGGER.info(f'CANDLE CLOSE: {self.close_price_list}')
         self.mm8_now = self.mm_now(8)
         self.mm8_before = self.mm_before(8)
         self.mm10_now = self.mm_now(10)

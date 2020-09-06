@@ -1,9 +1,7 @@
 from binance.client import Client
-from datetime import datetime
+from datetime import datetime, timedelta
 from config import LOGGER, API_KEY, SECRET_KEY
 from pprint import pprint
-
-client_production = Client(api_key=API_KEY, api_secret=SECRET_KEY)
 
 
 class MyAccount:
@@ -19,6 +17,7 @@ class MyAccount:
         self.interval_to_work = interval_to_work
         self.time_now = None
         self.time_to_run = None
+        self.timestamp_to_candle_data = None
         self.aceptable_loss = 0.1
         self.max_trade_taxes = 0.001
         self.minimum_order_len = minimum_order_len
@@ -57,6 +56,11 @@ class MyAccount:
             return Client.KLINE_INTERVAL_5MINUTE
         elif self.interval_to_work == 15:
             return Client.KLINE_INTERVAL_15MINUTE
+
+    def timestamp_for_candle_data(self):
+        self.get_time_to_run()
+        self.timestamp_to_candle_data = datetime.timestamp((self.time_to_run -
+                                                            timedelta(minutes=(self.interval_to_work * 2)))) * 1000
 
     def get_time_now(self):
         self.time_now = None

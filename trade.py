@@ -20,13 +20,14 @@ class Trade(Asset, MyAccount):
         self.order_executed_id = None
         self.profit_status = 'STANDING'
         self.stop = round(
-            self.my_init_asset_trade_balance * self.aceptable_loss, 3)
+            self.asset_pair_balance * self.aceptable_loss, 5)
         self.taxes_order_executed = None
         self.profit_check_value = None
 
     def make_market_order_entry_position(self):
-        self.order_quantity = round(
-            self.minimum_order_len/self.actual_price, 2)
+        self.order_quantity = self.minimum_order_len
+        # self.order_quantity = round(
+        #     self.minimum_order_len/self.actual_price, 1)
 
         LOGGER.info(f'ACTUAL PRICE: {self.actual_price}')
         LOGGER.info(f'ORDER QUANTITY: {self.order_quantity}')
@@ -36,12 +37,13 @@ class Trade(Asset, MyAccount):
                 symbol=self.symbol, quantity=self.order_quantity)
 
         if self.tendency == 'DOWN':
+
             self.order_made = self.client.order_market_sell(
                 symbol=self.symbol, quantity=self.order_quantity)
         self.order_made = self.dict_timestamp_to_time(
             data_dict=self.order_made, field_time_name='transactTime')
 
-        self.dict_to_log(self.order_made)
+        self.dict_list_dict_to_log(self.order_made)
 
         self.order_made_id = self.order_made['orderId']
         self.order_made_status = self.order_made['status']
@@ -59,7 +61,7 @@ class Trade(Asset, MyAccount):
                     symbol=self.symbol, quantity=self.order_executed_quantity)
 
             LOGGER.info('ORDER MADE: ')
-            self.dict_to_log(self.order_made)
+            self.dict_list_dict_to_log(self.order_made)
 
         elif self.profit_status == 'WINNING':
             LOGGER.info('WINNING!')
@@ -123,7 +125,7 @@ class Trade(Asset, MyAccount):
 
     def organize_order_made(self):
         LOGGER.info('SHOWING AGAIN, ORDER DATA: ')
-        self.dict_to_log(self.order_executed)
+        self.dict_list_dict_to_log(self.order_executed)
 
         self.order_executed_side = self.order_executed['side']
         self.order_executed_id = self.order_executed['orderId']
@@ -138,16 +140,16 @@ class Trade(Asset, MyAccount):
             self.order_executed_price = float(self.order_executed['price'])
 
         self.taxes_order_executed = round(
-            self.order_executed_price * self.max_trade_taxes, 3)
+            self.order_executed_price * self.max_trade_taxes, 5)
         LOGGER.info(f'TAXES FOR EXECUTED ORDER: {self.order_executed_price}')
 
     def check_profit_status(self):
         self.profit_check_value = round(
-            self.actual_price * self.order_executed_quantity, 3) - self.taxes_current_price
-        position_bought_winnin = round(self.minimum_order_len + self.stop, 3)
-        position_bought_losing = round(self.minimum_order_len - self.stop, 3)
-        position_sold_winnin = round(self.minimum_order_len - self.stop, 3)
-        position_sold_losing = round(self.minimum_order_len + self.stop, 3)
+            self.actual_price * self.order_executed_quantity, 5) - self.taxes_current_price
+        position_bought_winnin = round(self.minimum_order_len + self.stop, 5)
+        position_bought_losing = round(self.minimum_order_len - self.stop, 5)
+        position_sold_winnin = round(self.minimum_order_len - self.stop, 5)
+        position_sold_losing = round(self.minimum_order_len + self.stop, 5)
         LOGGER.info(f'PROFIT CHECK VALUE: {self.profit_check_value}')
 
         LOGGER.info(f'VALUES OF STOP TO CHECK OF:')
@@ -187,7 +189,7 @@ class Trade(Asset, MyAccount):
             LOGGER.info('CALCULATING TAXES FOR THE CURRENT VALUE')
 
             self.taxes_current_price = round(
-                self.actual_price * self.max_trade_taxes, 3)
+                self.actual_price * self.max_trade_taxes, 5)
 
             LOGGER.info('CHECKING PROFIT STATUS')
 

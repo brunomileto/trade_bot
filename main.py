@@ -7,8 +7,8 @@ from trade import Trade
 
 def run():
     LOGGER.info('INITIALIZING...')
-    bot = Trade(asset_main='BNB', asset_pair='USDT', minimum_order_len=10, isTest=True,
-                api_key=API_KEY_TEST, secret_key=SECRET_KEY_TEST, interval_to_work=1, limit_data=202)
+    bot = Trade(asset_main='XRP', asset_pair='BNB', minimum_order_len=0.1, isTest=False,
+                api_key=API_KEY, secret_key=SECRET_KEY, interval_to_work=5, limit_data=202)
     while True:
         LOGGER.info('GETTING CANDLE DATA')
         bot.get_candle_asset_data()
@@ -19,24 +19,33 @@ def run():
         LOGGER.info('SAVING INDICATORS')
         bot.save_indicators_data()
         if bot.tendency in ['UP', 'DOWN']:
-            LOGGER.info('MAKING AN ORDER')
-            bot.make_market_order_entry_position()
-            LOGGER.info('CHECKING ORDER STATUS')
-            bot.check_order_made_status()
-            if bot.order_made_status in ['FILLED', 'PARTIALLY_FILLED']:
-                LOGGER.info('ORGANIZING ORDER INFO')
-                bot.organize_order_made()
-                LOGGER.info('GETTING OUT OF CURRENT POSITION')
-                bot.get_out_current_position()
+            if bot.tendency == 'DOWN' and bot.asset_main_balance > 0:
+                LOGGER.info('MAKING AN ORDER')
+                bot.make_market_order_entry_position()
+                LOGGER.info('CHECKING ORDER STATUS')
+                bot.check_order_made_status()
+                if bot.order_made_status in ['FILLED', 'PARTIALLY_FILLED']:
+                    LOGGER.info('ORGANIZING ORDER INFO')
+                    bot.organize_order_made()
+                    LOGGER.info('GETTING OUT OF CURRENT POSITION')
+                    bot.get_out_current_position()
+                else:
+                    LOGGER.info(f'ORDER {bot.order_made_status.upper()}')
+                    LOGGER.info(
+                        f'TRYING AGAIN IN {bot.interval_to_work} MINUTE(S)')
+                    bot.wait_to_run_again()
             else:
-                LOGGER.info(f'ORDER {bot.order_made_status.upper()}')
+                LOGGER.info(f'THE TENDENCY IDENTIFIED IS: {bot.tendency}')
+                LOGGER.info(
+                    f'BUT YOUR QUANTITY OF {bot.asset_main} IS: {bot.asset_main_balance}')
+                LOGGER.info(
+                    f'BECAUSE OF THAT IT WAS NOT POSSIBLE TO MAKE A SELL ORDER')
                 LOGGER.info(
                     f'TRYING AGAIN IN {bot.interval_to_work} MINUTE(S)')
                 bot.wait_to_run_again()
-
         else:
             bot.bot_status = 'STAND_BY'
-            LOGGER.info('ORDER NOT EXECUTED!')
+            LOGGER.info('NO TENDENCY IDENTIFIED!')
             LOGGER.info(f'TRYING AGAIN IN {bot.interval_to_work} MINUTE(S)')
             bot.wait_to_run_again()
 
