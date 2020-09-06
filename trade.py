@@ -20,7 +20,7 @@ class Trade(Asset, MyAccount):
         self.order_executed_id = None
         self.profit_status = 'STANDING'
         self.stop = round(
-            self.asset_pair_balance * self.aceptable_loss, 5)
+            self.asset_pair_balance * self.aceptable_loss, 8)
         self.taxes_order_executed = None
         self.profit_check_value = None
 
@@ -140,16 +140,16 @@ class Trade(Asset, MyAccount):
             self.order_executed_price = float(self.order_executed['price'])
 
         self.taxes_order_executed = round(
-            self.order_executed_price * self.max_trade_taxes, 5)
+            self.order_executed_price * self.max_trade_taxes, 8)
         LOGGER.info(f'TAXES FOR EXECUTED ORDER: {self.order_executed_price}')
 
     def check_profit_status(self):
         self.profit_check_value = round(
-            self.actual_price * self.order_executed_quantity, 5) - self.taxes_current_price
-        position_bought_winnin = round(self.minimum_order_len + self.stop, 5)
-        position_bought_losing = round(self.minimum_order_len - self.stop, 5)
-        position_sold_winnin = round(self.minimum_order_len - self.stop, 5)
-        position_sold_losing = round(self.minimum_order_len + self.stop, 5)
+            self.actual_price * self.order_executed_quantity, 6) - self.taxes_current_price
+        position_bought_winnin = round(self.minimum_order_len + self.stop, 6)
+        position_bought_losing = round(self.minimum_order_len - self.stop, 6)
+        position_sold_winnin = round(self.minimum_order_len - self.stop, 6)
+        position_sold_losing = round(self.minimum_order_len + self.stop, 6)
         LOGGER.info(f'PROFIT CHECK VALUE: {self.profit_check_value}')
 
         LOGGER.info(f'VALUES OF STOP TO CHECK OF:')
@@ -189,7 +189,7 @@ class Trade(Asset, MyAccount):
             LOGGER.info('CALCULATING TAXES FOR THE CURRENT VALUE')
 
             self.taxes_current_price = round(
-                self.actual_price * self.max_trade_taxes, 5)
+                self.actual_price * self.max_trade_taxes, 8)
 
             LOGGER.info('CHECKING PROFIT STATUS')
 

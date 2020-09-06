@@ -58,13 +58,13 @@ class Asset(MyAccount):
 
     def get_current_asset_value(self):
         ticker_data = self.client.get_symbol_ticker(symbol=self.symbol)
-        self.actual_price = round(float(ticker_data['price']), 5)
+        self.actual_price = round(float(ticker_data['price']), 6)
         LOGGER.info(f'ACTUAL ASSET PRICE: {self.actual_price}')
 
     def get_account_asset_balance(self, asset):
         for balance in range(len(self.account['balances'])):
             if self.account['balances'][balance]['asset'] == asset:
-                return round(float(self.account['balances'][balance]['free']), 5)
+                return round(float(self.account['balances'][balance]['free']), 6)
 
     def get_candle_asset_data(self):
         self.candle_data_list.clear()
@@ -78,7 +78,7 @@ class Asset(MyAccount):
         moving_averages = windows.mean()
         moving_averages_list = moving_averages.tolist()
         without_nans = moving_averages_list[period - 1:]
-        return round(without_nans[0], 6)
+        return round(without_nans[0], 7)
 
     def mm_before(self, period):
         numbers_series = pd.Series(self.close_price_list)
@@ -86,7 +86,7 @@ class Asset(MyAccount):
         moving_averages = windows.mean()
         moving_averages_list = moving_averages.tolist()
         without_nans = moving_averages_list[period - 1:]
-        return round(without_nans[1], 6)
+        return round(without_nans[1], 7)
 
     def create_close_list(self):
         self.close_price_list.clear()
@@ -101,7 +101,6 @@ class Asset(MyAccount):
 
     def calculate_indicators(self):
         self.create_close_list()
-        LOGGER.info(f'CANDLE CLOSE: {self.close_price_list}')
         self.mm8_now = self.mm_now(8)
         self.mm8_before = self.mm_before(8)
         self.mm10_now = self.mm_now(10)
@@ -121,11 +120,13 @@ class Asset(MyAccount):
     def check_asset_tendency_lvl_easy(self):
         if self.mm20_now > self.mm20_before:
             if self.close_now > self.close_before:
-                self.tendency = 'UP'
-                return
+                if self.volume_now > self.volume_before:
+                    self.tendency = 'UP'
+                    return
         if self.mm20_now < self.mm20_before:
             if self.close_now < self.close_before:
-                self.tendency = 'DOWN'
-                return
+                if self.volume_now < self.volume_before:
+                    self.tendency = 'DOWN'
+                    return
         self.tendency = 'STAND'
         return

@@ -71,9 +71,12 @@ class MyAccount:
         self.interval_list.clear()
         self.interval_list.append(minute)
 
-        while minute < 59:
-            minute = minute + self.interval_to_work
-            self.interval_list.append(minute)
+        while True:
+            if minute + self.interval_to_work < 60:
+                minute = minute + self.interval_to_work
+                self.interval_list.append(minute)
+            else:
+                break
         self.get_time_now()
 
         for the_minute in self.interval_list:

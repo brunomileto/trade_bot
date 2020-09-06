@@ -7,7 +7,7 @@ from trade import Trade
 
 def run():
     LOGGER.info('INITIALIZING...')
-    bot = Trade(asset_main='XRP', asset_pair='BNB', minimum_order_len=0.1, isTest=False,
+    bot = Trade(asset_main='BNB', asset_pair='BTC', minimum_order_len=0.0001, isTest=False,
                 api_key=API_KEY, secret_key=SECRET_KEY, interval_to_work=5, limit_data=202)
     while True:
         LOGGER.info('GETTING CANDLE DATA')
@@ -19,7 +19,8 @@ def run():
         LOGGER.info('SAVING INDICATORS')
         bot.save_indicators_data()
         if bot.tendency in ['UP', 'DOWN']:
-            if bot.tendency == 'DOWN' and bot.asset_main_balance > 0:
+            if ((bot.tendency == 'DOWN' and bot.asset_main_balance > 0) or
+                    (bot.tendency == 'UP' and bot.asset_pair_balance > 0)):
                 LOGGER.info('MAKING AN ORDER')
                 bot.make_market_order_entry_position()
                 LOGGER.info('CHECKING ORDER STATUS')
@@ -36,10 +37,15 @@ def run():
                     bot.wait_to_run_again()
             else:
                 LOGGER.info(f'THE TENDENCY IDENTIFIED IS: {bot.tendency}')
+                if bot.tendency == 'DOWN':
+                    LOGGER.info(
+                        f'BUT YOUR QUANTITY OF {bot.asset_main} IS: {bot.asset_main_balance}')
+                else:
+                    LOGGER.info(
+                        f'BUT YOUR QUANTITY OF {bot.asset_pair} IS: {bot.asset_pair_balance}')
+
                 LOGGER.info(
-                    f'BUT YOUR QUANTITY OF {bot.asset_main} IS: {bot.asset_main_balance}')
-                LOGGER.info(
-                    f'BECAUSE OF THAT IT WAS NOT POSSIBLE TO MAKE A SELL ORDER')
+                    f'BECAUSE OF THAT IT WAS NOT POSSIBLE TO MAKE AN ORDER')
                 LOGGER.info(
                     f'TRYING AGAIN IN {bot.interval_to_work} MINUTE(S)')
                 bot.wait_to_run_again()
