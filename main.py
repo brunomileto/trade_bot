@@ -3,19 +3,20 @@ from config import API_KEY, SECRET_KEY, API_KEY_TEST, SECRET_KEY_TEST, API_TEST_
 from account import MyAccount
 from asset import Asset
 from trade import Trade
+import time
 
 
 def run():
     LOGGER.info('INITIALIZING...')
-    bot = Trade(asset_main='BNB', asset_pair='BTC', minimum_order_len=0.0001, isTest=False,
-                api_key=API_KEY, secret_key=SECRET_KEY, interval_to_work=5, limit_data=202)
+    bot = Trade(asset_main='BNB', asset_pair='BTC', minimum_order_len_asset_pair=0.0001, minimum_order_len_asset_main=0.1,
+                isTest=False, api_key=API_KEY, secret_key=SECRET_KEY, interval_to_work=5, limit_data=202)
     while True:
         LOGGER.info('GETTING CANDLE DATA')
         bot.get_candle_asset_data()
         LOGGER.info('CALCULATING INDICATORS')
         bot.calculate_indicators()
         LOGGER.info('CHECKING TENDENCY')
-        bot.check_asset_tendency_lvl_easy()
+        bot.check_asset_tendency_lvl_medium()
         LOGGER.info('SAVING INDICATORS')
         bot.save_indicators_data()
         if bot.tendency in ['UP', 'DOWN']:
@@ -23,8 +24,8 @@ def run():
                     (bot.tendency == 'UP' and bot.asset_pair_balance > 0)):
                 LOGGER.info('MAKING AN ORDER')
                 bot.make_market_order_entry_position()
-                LOGGER.info('CHECKING ORDER STATUS')
-                bot.check_order_made_status()
+                # LOGGER.info('CHECKING ORDER STATUS')
+                # bot.check_order_made_status()
                 if bot.order_made_status in ['FILLED', 'PARTIALLY_FILLED']:
                     LOGGER.info('ORGANIZING ORDER INFO')
                     bot.organize_order_made()

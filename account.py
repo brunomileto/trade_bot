@@ -1,12 +1,13 @@
 from binance.client import Client
 from datetime import datetime, timedelta
-from config import LOGGER, API_KEY, SECRET_KEY
 from pprint import pprint
+import time
+from config import LOGGER, API_KEY, SECRET_KEY
 
 
 class MyAccount:
 
-    def __init__(self, minimum_order_len, api_key, secret_key, isTest, interval_to_work=5):
+    def __init__(self, minimum_order_len_asset_main, minimum_order_len_asset_pair, api_key, secret_key, isTest, interval_to_work=5):
         self.client = Client(api_key=api_key, api_secret=secret_key)
         if isTest is True:
             self.client.API_URL = 'https://testnet.binance.vision/api'
@@ -20,7 +21,8 @@ class MyAccount:
         self.timestamp_to_candle_data = None
         self.aceptable_loss = 0.1
         self.max_trade_taxes = 0.001
-        self.minimum_order_len = minimum_order_len
+        self.minimum_order_len_asset_main = minimum_order_len_asset_main
+        self.minimum_order_len_asset_pair = minimum_order_len_asset_pair
         self.bot_status = 'STAND_BY'
         self.interval_list = []
 
@@ -78,13 +80,16 @@ class MyAccount:
             else:
                 break
         self.get_time_now()
-
+        minute_to_run = 0
+        hour_to_run = self.time_now.hour + 1
         for the_minute in self.interval_list:
             if self.time_now.minute < the_minute:
                 minute_to_run = the_minute
+                hour_to_run = self.time_now.hour
                 break
+
         self.time_to_run = datetime(
-            self.time_now.year, self.time_now.month, self.time_now.day, self.time_now.hour, minute_to_run, 0)
+            self.time_now.year, self.time_now.month, self.time_now.day, hour_to_run, minute_to_run, 0)
 
     def wait_to_run_again(self):
         self.get_time_to_run()

@@ -6,9 +6,9 @@ import time
 
 
 class Asset(MyAccount):
-    def __init__(self, asset_main, asset_pair, minimum_order_len, api_key, secret_key, isTest, interval_to_work, limit_data=202):
-        super().__init__(minimum_order_len=minimum_order_len, api_key=api_key, secret_key=secret_key, isTest=isTest,
-                         interval_to_work=interval_to_work)
+    def __init__(self, asset_main, asset_pair, minimum_order_len_asset_main, minimum_order_len_asset_pair, api_key, secret_key, isTest, interval_to_work, limit_data=202):
+        super().__init__(minimum_order_len_asset_main=minimum_order_len_asset_main, minimum_order_len_asset_pair=minimum_order_len_asset_pair,
+                         api_key=api_key, secret_key=secret_key, isTest=isTest, interval_to_work=interval_to_work)
         self.asset_main = asset_main.upper()
         self.asset_pair = asset_pair.upper()
         self.symbol = self.asset_main + self.asset_pair
@@ -128,5 +128,23 @@ class Asset(MyAccount):
                 if self.volume_now < self.volume_before:
                     self.tendency = 'DOWN'
                     return
+        self.tendency = 'STAND'
+        return
+
+    def check_asset_tendency_lvl_medium(self):
+        if self.mm20_now > self.mm20_before:
+            if self.close_now > self.close_before:
+                if self.volume_now > self.volume_before:
+                    if self.mm10_now > self.mm10_before:
+                        if self.mm10_now > self.mm20_now:
+                            self.tendency = 'UP'
+                            return
+        if self.mm20_now < self.mm20_before:
+            if self.close_now < self.close_before:
+                if self.volume_now < self.volume_before:
+                    if self.mm10_now < self.mm10_before:
+                        if self.mm10_now < self.mm20_now:
+                            self.tendency = 'DOWN'
+                            return
         self.tendency = 'STAND'
         return
